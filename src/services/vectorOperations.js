@@ -1,23 +1,28 @@
-export const getEmbedding = (text, dimensions = 384) => {
-    console.log('Generating embedding for:', text);
-    const words = text.toLowerCase().split(/\W+/);
-    const vector = new Array(dimensions).fill(0);
-    
-    words.forEach((word, index) => {
-      for (let i = 0; i < word.length; i++) {
-        const charCode = word.charCodeAt(i);
-        const position = (charCode + index) % dimensions;
-        vector[position] += 1;
-      }
-    });
-    
-    const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-    return vector.map(val => val / magnitude);
-  };
-  
-  export const cosineSimilarity = (vec1, vec2) => {
-    const dotProduct = vec1.reduce((sum, val, i) => sum + val * vec2[i], 0);
-    const magnitude1 = Math.sqrt(vec1.reduce((sum, val) => sum + val * val, 0));
-    const magnitude2 = Math.sqrt(vec2.reduce((sum, val) => sum + val * val, 0));
-    return 1 - (dotProduct / (magnitude1 * magnitude2));
-  };
+// src/services/vectorOperations.js
+
+function getEmbedding(text, dimensions) {
+  const words = text.toLowerCase().split(/\W+/);
+  const vector = new Array(dimensions).fill(0);
+
+  words.forEach((word, index) => {
+    for (let i = 0; i < word.length; i++) {
+      const charCode = word.charCodeAt(i);
+      const pos = (charCode + index) % dimensions;
+      vector[pos] += 1;
+    }
+  });
+
+  // 正規化（単純）
+  const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+  return vector.map(val => (magnitude > 0 ? val / magnitude : 0));
+}
+
+/**
+ * pgvector形式の文字列
+ * ex: '[0.0123,0.4567,...]'::vector(768)
+ */
+export function getEmbeddingVectorString(text, dimensions) {
+  const vec = getEmbedding(text, dimensions);
+  const embeddingStr = vec.map(v => v.toFixed(4)).join(',');
+  return `'[${embeddingStr}]'::vector(${dimensions})`;
+}

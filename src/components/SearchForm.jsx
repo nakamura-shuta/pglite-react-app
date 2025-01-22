@@ -1,27 +1,30 @@
 import React, { useState } from 'react';
-import { findRelevantEvents } from '../services/databaseOperations';
+import { findRelevantDocuments } from '../services/databaseOperations';
 import { getAIResponse } from '../services/aiOperations';
 
 function SearchForm({ db, setResult, setIsLoading }) {
   const [query, setQuery] = useState('');
-  const [apiKey, setApiKey] = useState('');
 
   const handleSearch = async () => {
-    if (!db || !query || !apiKey) {
-      alert('Database, query, or API key not set');
+    if (!db || !query) {
+      alert('Database or query not set');
       return;
     }
     setIsLoading(true);
+
     try {
-      const relevantEvents = await findRelevantEvents(db, query);
-      if (relevantEvents.length > 0) {
-        const response = await getAIResponse(apiKey, query, relevantEvents);
+      // 1. 埋め込み類似度で文書を検索
+      const relevantDocs = await findRelevantDocuments(db, query);
+
+      // 2. 得られたドキュメントをLLMに渡す
+      if (relevantDocs.length > 0) {
+        const response = await getAIResponse(query, relevantDocs);
         setResult(response);
       } else {
-        setResult('関連する出来事が見つかりませんでした。');
+        setResult('関連するデータが見つかりませんでした。');
       }
     } catch (error) {
-      console.error('Error finding events:', error);
+      console.error('Error searching documents:', error);
       setResult('エラーが発生しました。');
     } finally {
       setIsLoading(false);
@@ -30,17 +33,11 @@ function SearchForm({ db, setResult, setIsLoading }) {
 
   return (
     <div className="input-group">
-      <input
-        type="password"
-        value={apiKey}
-        onChange={(e) => setApiKey(e.target.value)}
-        placeholder="Anthropic APIキーを入力"
-      />
       <input 
         type="text" 
         value={query} 
         onChange={(e) => setQuery(e.target.value)} 
-        placeholder="質問を入力（例：2015年に何がありましたか？）"
+        placeholder="質問を入力（例：Grimlorは住める星？）"
       />
       <button className="search-button" onClick={handleSearch}>検索</button>
     </div>

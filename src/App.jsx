@@ -1,10 +1,9 @@
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
-import { PGlite } from "@electric-sql/pglite";
-import { vector } from "@electric-sql/pglite/vector";
-import CompanyHistory from './components/CompanyHistory';
+import { initDatabase } from './services/databaseOperations';
+import DocumentsSetup from './components/DocumentsSetup';
 import SearchForm from './components/SearchForm';
 import ResultDisplay from './components/ResultDisplay';
-import { initDatabase } from './services/databaseOperations';
 import './styles/App.css';
 
 function App() {
@@ -18,8 +17,8 @@ function App() {
 
   return (
     <div className="container">
-      <h1>会社の歴史 - RAGデモ</h1>
-      <CompanyHistory db={db} setIsLoading={setIsLoading} />
+      <h1>フィクションRAGデモ - pgvector + Gemini nano</h1>
+      <DocumentsSetup db={db} setIsLoading={setIsLoading} />
       <SearchForm db={db} setResult={setResult} setIsLoading={setIsLoading} />
       <ResultDisplay result={result} />
       {isLoading && <div className="loader">処理中...</div>}
